@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Notice from '@/components/Notice';
 import SchoolEditForm from '@/components/SchoolEditForm';
+import ApplyForm from '@/components/ApplyForm';
 
 type Tab = 'notice' | 'profile' | 'apply' | 'first' | 'second';
 
@@ -64,7 +65,7 @@ export default function DashboardClient({ school, city }: Props) {
       <div className="px-6 py-5">
         {tab === 'notice' && <Notice />}
         {tab === 'profile' && <SchoolEditForm />}
-        {tab === 'apply' && <p className="text-sm text-gray-500">申請作業（建置中）</p>}
+        {tab === 'apply' && <ApplyForm />}
         {tab === 'first' && <p className="text-sm text-gray-500">上學期成果（建置中）</p>}
         {tab === 'second' && <p className="text-sm text-gray-500">下學期成果（建置中）</p>}
       </div>
