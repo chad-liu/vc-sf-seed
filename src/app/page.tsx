@@ -90,6 +90,7 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={e => setPassword(e.target.value)}
+                placeholder="沿用舊網站密碼"
                 required
                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
               />

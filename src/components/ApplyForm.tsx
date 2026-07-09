@@ -232,10 +232,11 @@ export default function ApplyForm() {
 
   return (
     <div className="max-w-4xl space-y-8">
+      <p className="text-sm text-red-400 text-center">7/31前將申請資料和經費預算輸入齊全、課程規劃檔案上傳，視為申請完成。</p>
+
       {/* 1. 申請資料：預設唯讀，按「修改」進入編輯模式 */}
       <div className="bg-blue-50 rounded-lg p-6">
         <SectionTitle>申請資料</SectionTitle>
-        <p className="text-sm text-red-400 text-center mb-4">申請資料輸入齊全，視為申請完成。</p>
         <div className="flex items-center gap-2 mb-3">
           <label className="w-40 text-sm text-gray-700 text-right flex-shrink-0">學校簡稱</label>
           {editingApply ? (
