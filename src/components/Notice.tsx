@@ -18,17 +18,32 @@ export default function Notice() {
     });
   }, []);
 
-  if (loading) return <p className="text-sm text-gray-500">載入中...</p>;
-  if (items.length === 0) return <p className="text-sm text-gray-500">目前沒有公告及注意事項。</p>;
-
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6 max-w-3xl">
-      <h2 className="text-base font-bold text-gray-800 mb-4">公告及注意事項</h2>
-      <ul className="list-disc pl-5 space-y-2">
-        {items.map(item => (
-          <li key={item.id} className="text-sm text-gray-800 leading-relaxed">{item.news}</li>
-        ))}
-      </ul>
+    <div className="max-w-3xl">
+      {loading ? (
+        <p className="text-sm text-gray-500">載入中...</p>
+      ) : items.length === 0 ? (
+        <p className="text-sm text-gray-500">目前沒有公告及注意事項。</p>
+      ) : (
+        <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <h2 className="text-base font-bold text-gray-800 mb-4">公告及注意事項</h2>
+          <ul className="list-disc pl-5 space-y-2">
+            {items.map(item => (
+              <li key={item.id} className="text-sm text-gray-800 leading-relaxed">{item.news}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <p className="text-sm mt-4">
+        <a
+          href="https://drive.google.com/file/d/1Nk5NGC2V8-JLrG2AUBKa5jBNwjXmsXFq/view"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-700 underline"
+        >
+          115 學年度「三花菁英種子學堂」實施計畫
+        </a>
+      </p>
     </div>
   );
 }
