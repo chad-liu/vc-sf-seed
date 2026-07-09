@@ -26,7 +26,11 @@ export async function GET() {
   }
 
   if (existing) {
-    return NextResponse.json({ ...existing, planurl: planUrl(existing.plan_path) });
+    return NextResponse.json({
+      ...existing,
+      planurl: planUrl(existing.plan_path),
+      downloadname: `課程規劃-${existing.year}-${existing.schoolno}-${existing.school}.pdf`,
+    });
   }
 
   const { data: created, error: insertError } = await supabase
@@ -38,7 +42,7 @@ export async function GET() {
   if (insertError) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
   }
-  return NextResponse.json({ ...created, planurl: null });
+  return NextResponse.json({ ...created, planurl: null, downloadname: null });
 }
 
 const EDITABLE_FIELDS = [

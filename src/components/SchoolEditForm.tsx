@@ -91,9 +91,7 @@ export default function SchoolEditForm() {
 
   return (
     <div className="max-w-6xl">
-      <h2 className="inline-block bg-blue-600 text-white text-base font-bold px-3 py-1 rounded mb-4">
-        學校基本資料
-      </h2>
+      <h2 className="text-lg font-bold text-gray-800 mb-4">學校基本資料</h2>
 
       <div className="overflow-x-auto">
         <table className="border-collapse w-full">
@@ -210,7 +208,7 @@ export default function SchoolEditForm() {
 
       {/* 學校簡介 */}
       <div className="mt-6">
-        <h3 className="text-sm font-bold text-gray-800 mb-2">學校簡介:</h3>
+        <h3 className="text-lg font-bold text-gray-800 mb-2">學校簡介(300字以內)</h3>
         {editingDesc ? (
           <div className="flex gap-2 mb-2">
             <button onClick={handleSaveDesc} disabled={loading}
@@ -228,10 +226,14 @@ export default function SchoolEditForm() {
             編輯
           </button>
         )}
+        {editingDesc && (
+          <p className="text-sm text-gray-600 mb-1">尚可輸入{300 - (form.description ?? '').length}字</p>
+        )}
         <textarea
           value={editingDesc ? (form.description ?? '') : (profile.description ?? '')}
           onChange={set('description')}
           readOnly={!editingDesc}
+          maxLength={300}
           rows={8}
           className={`w-full border border-gray-300 rounded px-3 py-2 text-sm leading-relaxed ${editingDesc ? 'bg-white' : 'bg-gray-50'}`}
         />

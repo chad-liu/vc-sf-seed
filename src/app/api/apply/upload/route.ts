@@ -20,7 +20,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '僅接受 PDF 檔案' }, { status: 400 });
   }
 
-  const fileName = `${session.schoolNo}.pdf`;
+  // 取年度與舊檔路徑（Storage 物件名稱不允許中文，中文檔名於下載時以 download 參數指定）
+  const { data: apply, error: applyError } = await supabase
+    .from('sf_apply')
+    .select('year, plan_path')
+    .eq('schoolno', session.schoolNo)
+    .limit(1)
+    .maybeSingle();
+
+  if (applyError || !apply) {
+    return NextResponse.json({ error: applyError?.message ?? '尚無申請資料' }, { status: 500 });
+  }
+
+  const fileName = `plan-${apply.year}-${session.schoolNo}.pdf`;
   const buffer = Buffer.from(await file.arrayBuffer());
 
   const { error: uploadError } = await supabase.storage
@@ -31,7 +43,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: uploadError.message }, { status: 500 });
   }
 
+  // 舊檔名與新檔名不同時（如年度變更、或沿用舊命名規則的檔案），刪除舊檔
   const planPath = `${BUCKET}/${fileName}`;
+  if (apply.plan_path && apply.plan_path !== planPath) {
+    await supabase.storage.from(BUCKET).remove([apply.plan_path.replace(`${BUCKET}/`, '')]);
+  }
+
   const today = new Date().toISOString().slice(0, 10);
   const { error: updateError } = await supabase
     .from('sf_apply')
@@ -45,6 +62,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     ok: true,
     planurl: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${planPath}`,
+    downloadname: `課程規劃-${apply.year}-${session.schoolNo}-${session.school}.pdf`,
     planupdate: today,
   });
 }

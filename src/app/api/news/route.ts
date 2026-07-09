@@ -12,7 +12,7 @@ export async function GET() {
     .from('sf_news')
     .select('id, news, created_at')
     .eq('valid', true)
-    .order('created_at', { ascending: false });
+    .order('created_at', { ascending: true });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
