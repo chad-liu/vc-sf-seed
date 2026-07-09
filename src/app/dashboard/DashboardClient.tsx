@@ -44,10 +44,16 @@ export default function DashboardClient({ school, city }: Props) {
           <span className="font-bold text-sm">三花菁英種子學堂</span>
           <span className="ml-3 text-xs bg-blue-600 px-2 py-0.5 rounded">{city} {school}</span>
         </div>
-        <button onClick={handleLogout}
-          className="text-xs bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded">
-          登出
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={handleLogout}
+            className="text-xs bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded">
+            登出
+          </button>
+          <a href="https://chad-liu.github.io/Sunflower/#" target="_blank" rel="noopener noreferrer"
+            className="text-xs bg-blue-600 hover:bg-blue-500 px-3 py-1.5 rounded">
+            到活動首頁
+          </a>
+        </div>
       </div>
 
       {/* Tabs */}
