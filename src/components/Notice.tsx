@@ -44,6 +44,12 @@ export default function Notice() {
           115 學年度「三花菁英種子學堂」實施計畫
         </a>
       </p>
+      <p className="text-sm text-gray-800 mt-2">
+        活動聯絡人：劉老師{' '}
+        <a href="mailto:wentzu@lhes.tp.edu.tw" className="text-blue-700 underline">
+          wentzu@lhes.tp.edu.tw
+        </a>
+      </p>
     </div>
   );
 }
