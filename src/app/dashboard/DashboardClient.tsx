@@ -8,7 +8,7 @@ import ApplyForm from '@/components/ApplyForm';
 type Tab = 'notice' | 'profile' | 'apply' | 'first' | 'second';
 
 const TABS: { key: Tab; label: string }[] = [
-  { key: 'notice', label: '注意事項' },
+  { key: 'notice', label: '公告及注意事項' },
   { key: 'profile', label: '學校資料編輯' },
   { key: 'apply', label: '申請作業' },
   { key: 'first', label: '上學期成果' },
