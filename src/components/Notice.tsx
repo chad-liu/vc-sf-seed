@@ -44,8 +44,18 @@ export default function Notice() {
           115 學年度「三花菁英種子學堂」實施計畫
         </a>
       </p>
+      <p className="text-sm mt-2">
+        <a
+          href="https://sunflower.org.tw/seedschool_intro.php"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-700 underline"
+        >
+          三花基金會官網的菁英種子學堂
+        </a>
+      </p>
       <p className="text-sm text-gray-800 mt-2">
-        活動聯絡人：劉老師{' '}
+        基金會聯絡人：劉老師{' '}
         <a href="mailto:wentzu@lhes.tp.edu.tw" className="text-blue-700 underline">
           wentzu@lhes.tp.edu.tw
         </a>
