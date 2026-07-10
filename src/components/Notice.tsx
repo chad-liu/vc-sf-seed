@@ -72,7 +72,7 @@ export default function Notice() {
             src="https://gaotxzoxdcvottcohory.supabase.co/storage/v1/object/sign/sf_images/sf_logo.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wY2ZjMjk2NS0yMDM3LTQyNWQtYjQ1My0zZTUwNDVmNGM2MzgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJzZl9pbWFnZXMvc2ZfbG9nby5wbmciLCJzY29wZSI6ImRvd25sb2FkIiwiaWF0IjoxNzgzNjUwMzUzLCJleHAiOjQ5MDU3MTQzNTN9.avIPdvZQJbrf5DwxVurMmxNRxHVEvQLGqVhxZxJbJ_g"
             alt="三花菁英種子學堂 logo"
             className="mt-2"
-            style={{ width: '60%', height: '60%' }}
+            style={{ width: '60%', aspectRatio: '1 / 1' }}
           />
         </div>
       </div>
