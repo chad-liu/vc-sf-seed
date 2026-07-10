@@ -4,7 +4,7 @@ import { getSession } from '@/lib/session';
 
 const BUCKET = 'sf_plan_pdf';
 
-// 上傳授課規劃 PDF：依學校編號命名，重複上傳自動覆蓋
+// 上傳授課規畫 PDF：依學校編號命名，重複上傳自動覆蓋
 export async function POST(req: NextRequest) {
   const session = await getSession();
   if (!session.isLoggedIn) {
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({
     ok: true,
     planurl: `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${planPath}`,
-    downloadname: `課程規劃-${apply.year}-${session.schoolNo}-${session.school}.pdf`,
+    downloadname: `課程規畫-${apply.year}-${session.schoolNo}-${session.school}.pdf`,
     planupdate: today,
   });
 }

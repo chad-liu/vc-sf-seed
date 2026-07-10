@@ -29,7 +29,7 @@ export async function GET() {
     return NextResponse.json({
       ...existing,
       planurl: planUrl(existing.plan_path),
-      downloadname: `課程規劃-${existing.year}-${existing.schoolno}-${existing.school}.pdf`,
+      downloadname: `課程規畫-${existing.year}-${existing.schoolno}-${existing.school}.pdf`,
     });
   }
 
