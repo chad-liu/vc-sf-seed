@@ -34,32 +34,47 @@ export default function Notice() {
           </ul>
         </div>
       )}
-      <p className="text-sm mt-4">
-        <a
-          href="https://drive.google.com/file/d/1Nk5NGC2V8-JLrG2AUBKa5jBNwjXmsXFq/view"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-700 underline"
-        >
-          115 學年度「三花菁英種子學堂」實施計畫
-        </a>
-      </p>
-      <p className="text-sm mt-2">
-        <a
-          href="https://sunflower.org.tw/seedschool_intro.php"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-700 underline"
-        >
-          三花基金會官網的菁英種子學堂
-        </a>
-      </p>
-      <p className="text-sm text-gray-800 mt-2">
-        基金會聯絡人：劉老師{' '}
-        <a href="mailto:wentzu@lhes.tp.edu.tw" className="text-blue-700 underline">
-          wentzu@lhes.tp.edu.tw
-        </a>
-      </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+        {/* 左欄：相關連結與聯絡人 */}
+        <div>
+          <p className="text-sm">
+            <a
+              href="https://drive.google.com/file/d/1Nk5NGC2V8-JLrG2AUBKa5jBNwjXmsXFq/view"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-700 underline"
+            >
+              115 學年度「三花菁英種子學堂」實施計畫
+            </a>
+          </p>
+          <p className="text-sm mt-2">
+            <a
+              href="https://sunflower.org.tw/seedschool_intro.php"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-700 underline"
+            >
+              三花基金會官網的菁英種子學堂
+            </a>
+          </p>
+          <p className="text-sm text-gray-800 mt-2">
+            基金會聯絡人：劉老師{' '}
+            <a href="mailto:wentzu@lhes.tp.edu.tw" className="text-blue-700 underline">
+              wentzu@lhes.tp.edu.tw
+            </a>
+          </p>
+        </div>
+
+        {/* 右欄：學校網站放置 logo 說明 */}
+        <div>
+          <p className="text-sm text-gray-800">請於學校網站首頁明顯處放置「三花菁英種子學堂」logo</p>
+          <img
+            src="https://gaotxzoxdcvottcohory.supabase.co/storage/v1/object/sign/sf_images/sf_logo.png?token=eyJraWQiOiJzdG9yYWdlLXVybC1zaWduaW5nLWtleV8wY2ZjMjk2NS0yMDM3LTQyNWQtYjQ1My0zZTUwNDVmNGM2MzgiLCJhbGciOiJIUzI1NiJ9.eyJ1cmwiOiJzZl9pbWFnZXMvc2ZfbG9nby5wbmciLCJzY29wZSI6ImRvd25sb2FkIiwiaWF0IjoxNzgzNjUwMzUzLCJleHAiOjQ5MDU3MTQzNTN9.avIPdvZQJbrf5DwxVurMmxNRxHVEvQLGqVhxZxJbJ_g"
+            alt="三花菁英種子學堂 logo"
+            className="mt-2 max-w-full h-auto"
+          />
+        </div>
+      </div>
     </div>
   );
 }
