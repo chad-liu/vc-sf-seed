@@ -47,6 +47,7 @@ const EDITABLE_FIELDS = [
   'classtype', 'purpose', 'content', 'activetime',
   'activeobj', 'objnum', 'weaknum', 'teacher',
   'special', 'youtubetitle', 'youtube', 'remark',
+  'photodes1', 'photodes2', 'photodes3', 'photodes4', 'photodes5', 'photodes6',
 ] as const;
 
 export async function PUT(req: NextRequest) {

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const CLASS_TYPES = ['-', '運動類', '音樂類', '美術類', '舞蹈戲劇類', '知識科學類', '語文類', '其他'];
 
@@ -51,6 +51,14 @@ export default function Active1Form() {
   const [loaded, setLoaded] = useState(false);
   const [msg, setMsg] = useState('');
   const [saving, setSaving] = useState(false);
+  // 活動相片：6 格，各含說明與已上傳路徑
+  const [photos, setPhotos] = useState<{ des: string; path: string | null }[]>(
+    Array.from({ length: 6 }, () => ({ des: '', path: null }))
+  );
+  const [photoMsg, setPhotoMsg] = useState('');
+  const [uploadingSlot, setUploadingSlot] = useState<number | null>(null);
+  const [photoTs, setPhotoTs] = useState(0);
+  const photoRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   useEffect(() => {
     fetch('/api/active1').then(r => r.json()).then(data => {
@@ -58,7 +66,12 @@ export default function Active1Form() {
         const p = { ...EMPTY, ...data };
         setForm(p);
         setSaved(p);
+        setPhotos(Array.from({ length: 6 }, (_, i) => ({
+          des: data[`photodes${i + 1}`] ?? '',
+          path: data[`photo_path${i + 1}`] ?? null,
+        })));
       }
+      setPhotoTs(Date.now());
       setLoaded(true);
     });
   }, []);
@@ -69,8 +82,35 @@ export default function Active1Form() {
     setForm(prev => ({ ...prev, [name]: e.target.value }));
   };
 
+  // 除特色事蹟、影片標題、影片連結、備註外皆為必填
+  const REQUIRED_FIELDS: { key: keyof Active1; label: string }[] = [
+    { key: 'classtype', label: '開班類別' },
+    { key: 'purpose', label: '申請目的' },
+    { key: 'content', label: '課程內容' },
+    { key: 'activetime', label: '活動時段' },
+    { key: 'activeobj', label: '參加對象' },
+    { key: 'objnum', label: '受惠總人數' },
+    { key: 'weaknum', label: '弱勢生受惠人數' },
+    { key: 'teacher', label: '指導老師' },
+  ];
+
   const handleSave = async () => {
     setMsg('');
+    for (const { key, label } of REQUIRED_FIELDS) {
+      const v = form[key];
+      if (v === '' || v === null || v === undefined) {
+        setMsg(key === 'classtype' ? '錯誤：「開班類別」請選擇類別' : `錯誤：「${label}」為必填`);
+        return;
+      }
+    }
+    if (Number(form.objnum) <= 0) {
+      setMsg('錯誤：「受惠總人數」不能為 0');
+      return;
+    }
+    if (Number(form.weaknum) < 0) {
+      setMsg('錯誤：「弱勢生受惠人數」不能為負數');
+      return;
+    }
     setSaving(true);
     const res = await fetch('/api/active1', {
       method: 'PUT',
@@ -113,6 +153,71 @@ export default function Active1Form() {
     setEditing(true);
     setMsg('已從申請資料匯入，請確認內容後按「儲存」');
   };
+
+  // ---- 活動相片 ----
+  const isLandscape = (file: File) =>
+    new Promise<boolean>(resolve => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => { URL.revokeObjectURL(url); resolve(img.naturalWidth > img.naturalHeight); };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(false); };
+      img.src = url;
+    });
+
+  const handleUploadPhoto = async (i: number) => {
+    setPhotoMsg('');
+    const file = photoRefs.current[i]?.files?.[0];
+    if (!file) {
+      setPhotoMsg(`錯誤：相片${i + 1} 請先選擇檔案`);
+      return;
+    }
+    if (file.type !== 'image/jpeg' && !/\.jpe?g$/i.test(file.name)) {
+      setPhotoMsg(`錯誤：相片${i + 1} 僅接受 jpg 格式`);
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoMsg(`錯誤：相片${i + 1} 檔案大小不能超過 5MB`);
+      return;
+    }
+    if (!(await isLandscape(file))) {
+      setPhotoMsg(`錯誤：相片${i + 1} 須為橫式（寬大於高）`);
+      return;
+    }
+    setUploadingSlot(i);
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('slot', String(i + 1));
+    const res = await fetch('/api/active1/photo', { method: 'POST', body: fd });
+    const data = await res.json();
+    if (data.error) {
+      setPhotoMsg(`錯誤：相片${i + 1} ${data.error}`);
+    } else {
+      setPhotos(prev => prev.map((p, idx) => idx === i ? { ...p, path: data.path } : p));
+      setPhotoTs(Date.now());
+      setPhotoMsg(`相片${i + 1} 上傳成功`);
+      const ref = photoRefs.current[i];
+      if (ref) ref.value = '';
+    }
+    setUploadingSlot(null);
+  };
+
+  const handleSaveDes = async () => {
+    setPhotoMsg('');
+    setSaving(true);
+    const body: Record<string, string> = {};
+    photos.forEach((p, i) => { body[`photodes${i + 1}`] = p.des; });
+    const res = await fetch('/api/active1', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    setPhotoMsg(data.error ? `錯誤：${data.error}` : '相片說明已儲存');
+    setSaving(false);
+  };
+
+  const photoUrl = (path: string) =>
+    `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${path}?t=${photoTs}`;
 
   if (!loaded) return <p className="text-sm text-gray-500">載入中...</p>;
 
@@ -166,16 +271,28 @@ export default function Active1Form() {
             <span className="flex-1 text-sm text-gray-900 px-2 py-1.5 border-b border-gray-300 min-h-8">{form.classtype ?? ''}</span>
           )}
         </div>
-        {field('申請目的', 'purpose')}
-        {field('課程內容', 'content')}
-        {field('活動時段', 'activetime')}
-        {field('參加對象', 'activeobj')}
-        {field('受惠總人數', 'objnum', { type: 'number' })}
-        {field('弱勢生受惠人數', 'weaknum', { type: 'number' })}
-        {field('指導老師', 'teacher')}
+        {field('申請目的', 'purpose', { placeholder: '必填' })}
+        {field('課程內容', 'content', { placeholder: '必填' })}
+        {field('活動時段', 'activetime', { placeholder: '必填' })}
+        {field('參加對象', 'activeobj', { placeholder: '必填' })}
+        {field('受惠總人數', 'objnum', { type: 'number', placeholder: '必填' })}
+        {field('弱勢生受惠人數', 'weaknum', { type: 'number', placeholder: '必填' })}
+        {field('指導老師', 'teacher', { placeholder: '必填' })}
         {field('特色事蹟', 'special')}
         {field('影片標題', 'youtubetitle')}
-        {field('影片(YouTube連結)', 'youtube')}
+        {field('影片(YouTube連結)', 'youtube', { placeholder: '11個字元的代碼' })}
+        <div className="flex gap-2 mb-3">
+          <span className="w-40 flex-shrink-0" />
+          <div className="flex-1 border border-gray-300 bg-white rounded px-4 py-3 text-sm text-gray-700">
+            <b>影片上傳注意事項:</b>
+            <ol className="list-decimal pl-5 mt-1 space-y-0.5">
+              <li>影片長度 : 3~5分鐘</li>
+              <li>影片名稱 : 三花種子菁英學堂{form.year}學年度上期-校名-活動主題</li>
+              <li>影片代碼 : https://youtu.be/<span className="text-red-600">XXXXXXXXXXX</span> , 輸入X共11碼</li>
+              <li>設為公開，檢查影片是否可正常播放</li>
+            </ol>
+          </div>
+        </div>
         {field('備註', 'remark')}
         {msg && <p className={`text-sm mb-2 ml-42 ${msg.startsWith('錯誤') ? 'text-red-600' : 'text-green-600'}`}>{msg}</p>}
         <div className="ml-42 flex gap-2 flex-wrap">
@@ -200,6 +317,47 @@ export default function Active1Form() {
             className="bg-green-600 text-white px-6 py-2 rounded text-sm hover:bg-green-700">
             從申請資料匯入
           </button>
+        </div>
+      </div>
+
+      {/* 活動相片 */}
+      <div className="bg-blue-50 rounded-lg p-6">
+        <SectionTitle>活動相片</SectionTitle>
+        <p className="text-sm text-gray-700 mb-4">上傳6張活動相片，jpg格式，橫式，檔案大小不超過5MB</p>
+        <div className="space-y-3">
+          {photos.map((p, i) => (
+            <div key={i} className="flex items-center gap-3 flex-wrap bg-white border border-gray-300 rounded px-3 py-2">
+              <span className="text-sm text-gray-700 w-14 flex-shrink-0">相片{i + 1}</span>
+              <input
+                value={p.des}
+                onChange={e => setPhotos(prev => prev.map((x, idx) => idx === i ? { ...x, des: e.target.value } : x))}
+                placeholder="相片說明"
+                className="flex-1 min-w-40 border border-gray-300 rounded px-2 py-1.5 text-sm"
+              />
+              <input type="file" accept="image/jpeg,.jpg,.jpeg"
+                ref={el => { photoRefs.current[i] = el; }}
+                className="text-sm file:mr-2 file:px-3 file:py-1.5 file:rounded file:border-0 file:bg-blue-600 file:text-white file:text-sm file:cursor-pointer" />
+              <button type="button" onClick={() => handleUploadPhoto(i)} disabled={uploadingSlot !== null}
+                className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700 disabled:opacity-50">
+                {uploadingSlot === i ? '上傳中...' : '上傳'}
+              </button>
+              {p.path ? (
+                <a href={photoUrl(p.path)} target="_blank" rel="noopener noreferrer">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={photoUrl(p.path)} alt={`相片${i + 1}`} className="h-16 w-auto rounded border border-gray-300" />
+                </a>
+              ) : (
+                <span className="text-xs text-gray-400">尚未上傳</span>
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center gap-3 mt-4">
+          <button type="button" onClick={handleSaveDes} disabled={saving}
+            className="bg-blue-600 text-white px-6 py-2 rounded text-sm hover:bg-blue-700 disabled:opacity-50">
+            {saving ? '儲存中...' : '儲存相片說明'}
+          </button>
+          {photoMsg && <span className={`text-sm ${photoMsg.startsWith('錯誤') ? 'text-red-600' : 'text-green-600'}`}>{photoMsg}</span>}
         </div>
       </div>
     </div>
