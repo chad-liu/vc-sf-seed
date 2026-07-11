@@ -392,7 +392,7 @@ export default function ActiveForm({ apiBase, term }: Props) {
             <b>影片上傳注意事項:</b>
             <ol className="list-decimal pl-5 mt-1 space-y-0.5">
               <li>影片長度 : 3~5分鐘</li>
-              <li>影片名稱 : 三花菁英種子學堂{form.year}學年度{term}期-{'{校名}'}-{'{活動主題}'}</li>
+              <li>影片名稱 : 三花菁英種子學堂{form.year}學年度{term}學期-{'{校名}'}-{'{活動主題}'}</li>
               <li>影片代碼 : https://youtu.be/<span className="text-red-600">XXXXXXXXXXX</span> , 輸入X共11碼</li>
               <li>設為公開，檢查影片是否可正常播放</li>
             </ol>
