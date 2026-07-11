@@ -111,6 +111,15 @@ export default function Active1Form() {
       setMsg('錯誤：「弱勢生受惠人數」不能為負數');
       return;
     }
+    // 影片標題與影片連結必須成對填寫
+    if (form.youtube && !form.youtubetitle) {
+      setMsg('錯誤：已輸入影片連結，「影片標題」不能空白');
+      return;
+    }
+    if (form.youtubetitle && !form.youtube) {
+      setMsg('錯誤：已輸入影片標題，「影片(YouTube連結)」不能空白');
+      return;
+    }
     setSaving(true);
     const res = await fetch('/api/active1', {
       method: 'PUT',
@@ -280,14 +289,33 @@ export default function Active1Form() {
         {field('指導老師', 'teacher', { placeholder: '必填' })}
         {field('特色事蹟', 'special')}
         {field('影片標題', 'youtubetitle')}
-        {field('影片(YouTube連結)', 'youtube', { placeholder: '11個字元的代碼' })}
+        <div className="flex items-center gap-2 mb-3">
+          <label className="w-40 text-sm text-gray-700 text-right flex-shrink-0">影片(YouTube連結)</label>
+          {editing ? (
+            <input
+              value={form.youtube ?? ''}
+              onChange={set('youtube')}
+              placeholder="11個字元的代碼"
+              className={input}
+            />
+          ) : (
+            <span className="flex-1 text-sm text-gray-900 px-2 py-1.5 border-b border-gray-300 min-h-8">
+              {form.youtube ?? ''}
+            </span>
+          )}
+          <button type="button" disabled={!form.youtube}
+            onClick={() => window.open(`https://youtu.be/${form.youtube}`, '_blank', 'noopener')}
+            className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700 disabled:opacity-50 flex-shrink-0">
+            測試播放
+          </button>
+        </div>
         <div className="flex gap-2 mb-3">
           <span className="w-40 flex-shrink-0" />
           <div className="flex-1 border border-gray-300 bg-white rounded px-4 py-3 text-sm text-gray-700">
             <b>影片上傳注意事項:</b>
             <ol className="list-decimal pl-5 mt-1 space-y-0.5">
               <li>影片長度 : 3~5分鐘</li>
-              <li>影片名稱 : 三花種子菁英學堂{form.year}學年度上期-校名-活動主題</li>
+              <li>影片名稱 : 三花菁英種子學堂{form.year}學年度上期-{'{校名}'}-{'{活動主題}'}</li>
               <li>影片代碼 : https://youtu.be/<span className="text-red-600">XXXXXXXXXXX</span> , 輸入X共11碼</li>
               <li>設為公開，檢查影片是否可正常播放</li>
             </ol>
