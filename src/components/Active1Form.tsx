@@ -192,10 +192,15 @@ export default function Active1Form() {
       setPhotoMsg(`錯誤：相片${i + 1} 須為橫式（寬大於高）`);
       return;
     }
+    if (!photos[i].des.trim()) {
+      setPhotoMsg(`錯誤：相片${i + 1} 請先輸入相片說明再上傳`);
+      return;
+    }
     setUploadingSlot(i);
     const fd = new FormData();
     fd.append('file', file);
     fd.append('slot', String(i + 1));
+    fd.append('des', photos[i].des.trim());
     const res = await fetch('/api/active1/photo', { method: 'POST', body: fd });
     const data = await res.json();
     if (data.error) {
@@ -212,6 +217,17 @@ export default function Active1Form() {
 
   const handleSaveDes = async () => {
     setPhotoMsg('');
+    // 相片與說明必須成對
+    for (let i = 0; i < photos.length; i++) {
+      if (photos[i].path && !photos[i].des.trim()) {
+        setPhotoMsg(`錯誤：相片${i + 1} 已上傳，相片說明不能空白`);
+        return;
+      }
+      if (!photos[i].path && photos[i].des.trim()) {
+        setPhotoMsg(`錯誤：相片${i + 1} 已有說明，請上傳相片`);
+        return;
+      }
+    }
     setSaving(true);
     const body: Record<string, string> = {};
     photos.forEach((p, i) => { body[`photodes${i + 1}`] = p.des; });

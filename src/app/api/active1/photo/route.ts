@@ -16,6 +16,7 @@ export async function POST(req: NextRequest) {
   const formData = await req.formData();
   const file = formData.get('file');
   const slot = Number(formData.get('slot'));
+  const des = String(formData.get('des') ?? '').trim();
 
   if (!Number.isInteger(slot) || slot < 1 || slot > 6) {
     return NextResponse.json({ error: '相片編號錯誤' }, { status: 400 });
@@ -28,6 +29,9 @@ export async function POST(req: NextRequest) {
   }
   if (file.size > MAX_SIZE) {
     return NextResponse.json({ error: '檔案大小不能超過 5MB' }, { status: 400 });
+  }
+  if (!des) {
+    return NextResponse.json({ error: '請先輸入相片說明' }, { status: 400 });
   }
 
   const pathField = `photo_path${slot}`;
@@ -63,9 +67,10 @@ export async function POST(req: NextRequest) {
     await supabase.storage.from(BUCKET).remove([oldPath.replace(`${BUCKET}/`, '')]);
   }
 
+  // 相片與說明成對：上傳時一併儲存該張說明
   const { error: updateError } = await supabase
     .from('sf_active1')
-    .update({ [pathField]: planPath })
+    .update({ [pathField]: planPath, [`photodes${slot}`]: des })
     .eq('schoolno', session.schoolNo);
 
   if (updateError) {
