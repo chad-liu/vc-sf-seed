@@ -9,8 +9,17 @@ const IMPORT_FIELDS = [
   'activeobj', 'objnum', 'weaknum', 'teacher',
 ] as const;
 
-interface Active1 {
+// 下學期成果文件（PDF）三種類別
+const DOC_ITEMS = [
+  { kind: 'teacher', label: '教師心得' },
+  { kind: 'student', label: '學生心得' },
+  { kind: 'sheet', label: '原始憑證' },
+] as const;
+type DocKind = typeof DOC_ITEMS[number]['kind'];
+
+interface ActiveData {
   year: string;
+  schoolno: string;
   school: string;
   classtype: string;
   purpose: string;
@@ -26,8 +35,8 @@ interface Active1 {
   remark: string;
 }
 
-const EMPTY: Active1 = {
-  year: '', school: '', classtype: '', purpose: '', content: '', activetime: '',
+const EMPTY: ActiveData = {
+  year: '', schoolno: '', school: '', classtype: '', purpose: '', content: '', activetime: '',
   activeobj: '', objnum: null, weaknum: null, teacher: '',
   special: '', youtubetitle: '', youtube: '', remark: '',
 };
@@ -44,9 +53,14 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function Active1Form() {
-  const [form, setForm] = useState<Active1>(EMPTY);
-  const [saved, setSaved] = useState<Active1>(EMPTY);
+interface Props {
+  apiBase: string;        // /api/active1 或 /api/active2
+  term: '上' | '下';
+}
+
+export default function ActiveForm({ apiBase, term }: Props) {
+  const [form, setForm] = useState<ActiveData>(EMPTY);
+  const [saved, setSaved] = useState<ActiveData>(EMPTY);
   const [editing, setEditing] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [msg, setMsg] = useState('');
@@ -59,9 +73,14 @@ export default function Active1Form() {
   const [uploadingSlot, setUploadingSlot] = useState<number | null>(null);
   const [photoTs, setPhotoTs] = useState(0);
   const photoRefs = useRef<(HTMLInputElement | null)[]>([]);
+  // 下學期成果文件（PDF）：教師心得/學生心得/原始憑證
+  const [docs, setDocs] = useState<Record<DocKind, string | null>>({ teacher: null, student: null, sheet: null });
+  const [docMsg, setDocMsg] = useState('');
+  const [uploadingDoc, setUploadingDoc] = useState<DocKind | null>(null);
+  const docRefs = useRef<Partial<Record<DocKind, HTMLInputElement | null>>>({});
 
   useEffect(() => {
-    fetch('/api/active1').then(r => r.json()).then(data => {
+    fetch(apiBase).then(r => r.json()).then(data => {
       if (!data.error) {
         const p = { ...EMPTY, ...data };
         setForm(p);
@@ -70,20 +89,25 @@ export default function Active1Form() {
           des: data[`photodes${i + 1}`] ?? '',
           path: data[`photo_path${i + 1}`] ?? null,
         })));
+        setDocs({
+          teacher: data.teacher_path ?? null,
+          student: data.student_path ?? null,
+          sheet: data.sheet_path ?? null,
+        });
       }
       setPhotoTs(Date.now());
       setLoaded(true);
     });
-  }, []);
+  }, [apiBase]);
 
-  const set = (name: keyof Active1) => (
+  const set = (name: keyof ActiveData) => (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
     setForm(prev => ({ ...prev, [name]: e.target.value }));
   };
 
   // 除特色事蹟、影片標題、影片連結、備註外皆為必填
-  const REQUIRED_FIELDS: { key: keyof Active1; label: string }[] = [
+  const REQUIRED_FIELDS: { key: keyof ActiveData; label: string }[] = [
     { key: 'classtype', label: '開班類別' },
     { key: 'purpose', label: '申請目的' },
     { key: 'content', label: '課程內容' },
@@ -121,7 +145,7 @@ export default function Active1Form() {
       return;
     }
     setSaving(true);
-    const res = await fetch('/api/active1', {
+    const res = await fetch(apiBase, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(form),
@@ -130,7 +154,7 @@ export default function Active1Form() {
     if (data.error) {
       setMsg(`錯誤：${data.error}`);
     } else {
-      setMsg('上學期成果已儲存');
+      setMsg(`${term}學期成果已儲存`);
       setSaved(form);
       setEditing(false);
     }
@@ -143,10 +167,15 @@ export default function Active1Form() {
     setMsg('');
   };
 
-  // 從 sf_apply 匯入相對應欄位，帶入表單後進入修改模式，按儲存才寫入
+  // 匯入相對應欄位：上學期從申請資料（sf_apply）、下學期從上學期成果（sf_active1）
+  // 帶入表單後進入修改模式，按儲存才寫入
+  const importSource = term === '上'
+    ? { url: '/api/apply', label: '從申請資料匯入' }
+    : { url: '/api/active1', label: '從上學期成果匯入' };
+
   const handleImport = async () => {
     setMsg('');
-    const res = await fetch('/api/apply');
+    const res = await fetch(importSource.url);
     const data = await res.json();
     if (data.error) {
       setMsg(`錯誤：${data.error}`);
@@ -160,7 +189,37 @@ export default function Active1Form() {
       return next;
     });
     setEditing(true);
-    setMsg('已從申請資料匯入，請確認內容後按「儲存」');
+    setMsg(`已${importSource.label}，請確認內容後按「儲存」`);
+  };
+
+  // ---- 成果文件（PDF）上傳，僅下學期 ----
+  const handleUploadDoc = async (kind: DocKind, label: string) => {
+    setDocMsg('');
+    const file = docRefs.current[kind]?.files?.[0];
+    if (!file) {
+      setDocMsg(`錯誤：${label} 請先選擇檔案`);
+      return;
+    }
+    if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+      setDocMsg(`錯誤：${label} 僅接受 PDF 檔案`);
+      return;
+    }
+    setUploadingDoc(kind);
+    const fd = new FormData();
+    fd.append('file', file);
+    fd.append('kind', kind);
+    const res = await fetch(`${apiBase}/doc`, { method: 'POST', body: fd });
+    const data = await res.json();
+    if (data.error) {
+      setDocMsg(`錯誤：${label} ${data.error}`);
+    } else {
+      setDocs(prev => ({ ...prev, [kind]: data.path }));
+      setPhotoTs(Date.now());
+      setDocMsg(`${label} 上傳成功`);
+      const ref = docRefs.current[kind];
+      if (ref) ref.value = '';
+    }
+    setUploadingDoc(null);
   };
 
   // ---- 活動相片 ----
@@ -201,7 +260,7 @@ export default function Active1Form() {
     fd.append('file', file);
     fd.append('slot', String(i + 1));
     fd.append('des', photos[i].des.trim());
-    const res = await fetch('/api/active1/photo', { method: 'POST', body: fd });
+    const res = await fetch(`${apiBase}/photo`, { method: 'POST', body: fd });
     const data = await res.json();
     if (data.error) {
       setPhotoMsg(`錯誤：相片${i + 1} ${data.error}`);
@@ -231,7 +290,7 @@ export default function Active1Form() {
     setSaving(true);
     const body: Record<string, string> = {};
     photos.forEach((p, i) => { body[`photodes${i + 1}`] = p.des; });
-    const res = await fetch('/api/active1', {
+    const res = await fetch(apiBase, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -259,7 +318,7 @@ export default function Active1Form() {
 
   const field = (
     label: string,
-    name: keyof Active1,
+    name: keyof ActiveData,
     opts: { placeholder?: string; type?: string } = {}
   ) => (
     <div className="flex items-center gap-2 mb-3">
@@ -283,7 +342,7 @@ export default function Active1Form() {
   return (
     <div className="max-w-4xl space-y-8">
       <div className="bg-blue-50 rounded-lg p-6">
-        <SectionTitle>上學期成果</SectionTitle>
+        <SectionTitle>{term}學期成果</SectionTitle>
         {roField('學年度', form.year)}
         {roField('學校簡稱', form.school)}
         <div className="flex items-center gap-2 mb-3">
@@ -331,7 +390,7 @@ export default function Active1Form() {
             <b>影片上傳注意事項:</b>
             <ol className="list-decimal pl-5 mt-1 space-y-0.5">
               <li>影片長度 : 3~5分鐘</li>
-              <li>影片名稱 : 三花菁英種子學堂{form.year}學年度上期-{'{校名}'}-{'{活動主題}'}</li>
+              <li>影片名稱 : 三花菁英種子學堂{form.year}學年度{term}期-{'{校名}'}-{'{活動主題}'}</li>
               <li>影片代碼 : https://youtu.be/<span className="text-red-600">XXXXXXXXXXX</span> , 輸入X共11碼</li>
               <li>設為公開，檢查影片是否可正常播放</li>
             </ol>
@@ -359,10 +418,41 @@ export default function Active1Form() {
           )}
           <button type="button" onClick={handleImport}
             className="bg-green-600 text-white px-6 py-2 rounded text-sm hover:bg-green-700">
-            從申請資料匯入
+            {importSource.label}
           </button>
         </div>
       </div>
+
+      {/* 成果文件上傳（僅下學期） */}
+      {term === '下' && (
+        <div className="bg-blue-50 rounded-lg p-6">
+          <SectionTitle>成果文件上傳</SectionTitle>
+          <p className="text-sm text-gray-700 mb-4">請將文件存成 PDF 檔上傳，重新上傳會自動覆蓋舊檔</p>
+          <div className="space-y-3">
+            {DOC_ITEMS.map(({ kind, label }) => (
+              <div key={kind} className="flex items-center gap-3 flex-wrap bg-white border border-gray-300 rounded px-3 py-2">
+                <span className="text-sm text-gray-700 w-20 flex-shrink-0">{label}(pdf)</span>
+                <input type="file" accept="application/pdf,.pdf"
+                  ref={el => { docRefs.current[kind] = el; }}
+                  className="text-sm file:mr-2 file:px-3 file:py-1.5 file:rounded file:border-0 file:bg-blue-600 file:text-white file:text-sm file:cursor-pointer" />
+                <button type="button" onClick={() => handleUploadDoc(kind, label)} disabled={uploadingDoc !== null}
+                  className="bg-blue-600 text-white px-4 py-1.5 rounded text-sm hover:bg-blue-700 disabled:opacity-50">
+                  {uploadingDoc === kind ? '上傳中...' : '上傳'}
+                </button>
+                {docs[kind] ? (
+                  <a href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${docs[kind]}?download=${encodeURIComponent(`${form.year}${label}_${form.schoolno}_${form.school}.pdf`)}&t=${photoTs}`}
+                    className="text-sm text-blue-700 underline">
+                    {form.year}{label}_{form.schoolno}_{form.school}.pdf
+                  </a>
+                ) : (
+                  <span className="text-xs text-gray-400">尚未上傳</span>
+                )}
+              </div>
+            ))}
+          </div>
+          {docMsg && <p className={`text-sm mt-3 ${docMsg.startsWith('錯誤') ? 'text-red-600' : 'text-green-600'}`}>{docMsg}</p>}
+        </div>
+      )}
 
       {/* 活動相片 */}
       <div className="bg-blue-50 rounded-lg p-6">

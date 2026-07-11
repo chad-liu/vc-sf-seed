@@ -1,4 +1,4 @@
 import { createPhotoHandler } from '@/lib/activeHandlers';
 
-const handlers = createPhotoHandler('sf_active1', 'sf_photo1', '上');
+const handlers = createPhotoHandler('sf_active2', 'sf_photo2', '下');
 export const POST = handlers.POST;
