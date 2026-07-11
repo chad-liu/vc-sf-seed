@@ -216,8 +216,25 @@ export default function ApplyForm() {
   const grandTotal = rows.reduce((sum, r) => sum + rowTotal(r), 0);
 
   const handleSaveRow = async (i: number) => {
-    setSaving(true);
     setDetailMsg('');
+    const r = rows[i];
+    if (!r.item.trim()) {
+      setDetailMsg('錯誤：「項目」為必填');
+      return;
+    }
+    if (!r.unit.trim()) {
+      setDetailMsg('錯誤：「單位」為必填');
+      return;
+    }
+    if (r.unitprice !== '' && Number(r.unitprice) < 0) {
+      setDetailMsg('錯誤：「單價」不能為負數');
+      return;
+    }
+    if (r.amount !== '' && Number(r.amount) < 0) {
+      setDetailMsg('錯誤：「數量」不能為負數');
+      return;
+    }
+    setSaving(true);
     const res = await fetch(`/api/apply/details/${rows[i].id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -389,16 +406,16 @@ export default function ApplyForm() {
                       </select>
                     </td>
                     <td className={td}>
-                      <input value={r.item} onChange={e => setRow(i, 'item', e.target.value)} className={input} />
+                      <input value={r.item} onChange={e => setRow(i, 'item', e.target.value)} placeholder="必填" className={input} />
                     </td>
                     <td className={td}>
-                      <input type="number" value={r.unitprice} onChange={e => setRow(i, 'unitprice', e.target.value)} className={input} />
+                      <input type="number" min={0} value={r.unitprice} onChange={e => setRow(i, 'unitprice', e.target.value)} className={input} />
                     </td>
                     <td className={td}>
-                      <input type="number" value={r.amount} onChange={e => setRow(i, 'amount', e.target.value)} className={input} />
+                      <input type="number" min={0} value={r.amount} onChange={e => setRow(i, 'amount', e.target.value)} className={input} />
                     </td>
                     <td className={td}>
-                      <input value={r.unit} onChange={e => setRow(i, 'unit', e.target.value)} className={input} />
+                      <input value={r.unit} onChange={e => setRow(i, 'unit', e.target.value)} placeholder="必填" className={input} />
                     </td>
                     <td className={`${td} text-right`}>{rowTotal(r).toLocaleString()}</td>
                     <td className={td}>

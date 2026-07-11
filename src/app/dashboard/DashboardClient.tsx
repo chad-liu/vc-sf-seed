@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Notice from '@/components/Notice';
 import SchoolEditForm from '@/components/SchoolEditForm';
 import ApplyForm from '@/components/ApplyForm';
+import Active1Form from '@/components/Active1Form';
 
 type Tab = 'notice' | 'profile' | 'apply' | 'first' | 'second';
 
@@ -72,7 +73,7 @@ export default function DashboardClient({ school, city }: Props) {
         {tab === 'notice' && <Notice />}
         {tab === 'profile' && <SchoolEditForm />}
         {tab === 'apply' && <ApplyForm />}
-        {tab === 'first' && <p className="text-sm text-gray-500">上學期成果（建置中）</p>}
+        {tab === 'first' && <Active1Form />}
         {tab === 'second' && <p className="text-sm text-gray-500">下學期成果（建置中）</p>}
       </div>
     </div>
