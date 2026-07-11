@@ -341,6 +341,8 @@ export default function ActiveForm({ apiBase, term }: Props) {
 
   return (
     <div className="max-w-4xl space-y-8">
+      <p className="text-sm text-red-400 text-center">請於{term}學期末繳交實施成果</p>
+
       <div className="bg-blue-50 rounded-lg p-6">
         <SectionTitle>{term}學期成果</SectionTitle>
         {roField('學年度', form.year)}
@@ -431,7 +433,7 @@ export default function ActiveForm({ apiBase, term }: Props) {
           <div className="space-y-3">
             {DOC_ITEMS.map(({ kind, label }) => (
               <div key={kind} className="flex items-center gap-3 flex-wrap bg-white border border-gray-300 rounded px-3 py-2">
-                <span className="text-sm text-gray-700 w-20 flex-shrink-0">{label}(pdf)</span>
+                <span className="text-sm text-gray-700 w-20 flex-shrink-0">{label}</span>
                 <input type="file" accept="application/pdf,.pdf"
                   ref={el => { docRefs.current[kind] = el; }}
                   className="text-sm file:mr-2 file:px-3 file:py-1.5 file:rounded file:border-0 file:bg-blue-600 file:text-white file:text-sm file:cursor-pointer" />
