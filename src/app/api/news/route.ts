@@ -12,6 +12,7 @@ export async function GET() {
     .from('sf_news')
     .select('id, news, created_at')
     .eq('valid', true)
+    .eq('news_for', '種子學堂')
     .order('created_at', { ascending: true });
 
   if (error) {
