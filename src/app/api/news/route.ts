@@ -13,7 +13,8 @@ export async function GET() {
     .select('id, news, created_at')
     .eq('valid', true)
     .eq('news_for', '種子學堂')
-    .order('created_at', { ascending: true });
+    .order('sort', { ascending: true })
+    .order('id', { ascending: true });
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
